@@ -299,7 +299,7 @@ contract PPToken is BurnableToken{
     }
     */
     function PPToken() public{
-        uint256 initialSupply = 20000000;
+        uint256 initialSupply = 20000;
         uint256 _freezTime = now + (10 minutes);
         saleAgent = owner;
         
@@ -565,8 +565,8 @@ contract CappedCrowdsale is Crowdsale {
     super._preValidatePurchase(_beneficiary, _weiAmount);
     require(_beneficiary != address(0));
     require(_weiAmount != 0);
-    require(!capReached());
-    //require(weiRaised.add(_weiAmount) <= cap);
+    //require(!capReached());
+    require(weiRaised.add(_weiAmount) <= cap);
   }
 
 }
@@ -831,22 +831,22 @@ contract StagebleCrowdsale is TimedCrowdsale{
     
     function StagebleCrowdsale() public {
         stage[0]["bonus"] = 30;
-        stage[0]["cap"] = (rate * (10 ether));
-        stage[0]["tranmin"] = (7 ether);
+        stage[0]["cap"] = (rate * (6 ether)); // 3 mln / 1000
+        stage[0]["tranmin"] = (7 ether)/(1000);
         stage[0]["closeTime"] = openingTime.add(2 minutes);
         
         stage[1]["bonus"] = 20;
-        stage[1]["cap"] = rate * 10 ether;
+        stage[1]["cap"] = rate * 6 ether;
         stage[1]["tranmin"] = (1 ether)/100;
         stage[1]["closeTime"] = stage[0]["closeTime"].add(2 minutes);
         
         stage[2]["bonus"] = 15;
-        stage[2]["cap"] = rate * 10 ether;
+        stage[2]["cap"] = rate * 4 ether;
         stage[2]["tranmin"] = stage[1]["tranmin"];
         stage[2]["closeTime"] = stage[1]["closeTime"].add(2 minutes);
         
         stage[3]["bonus"] = 10;
-        stage[3]["cap"] = rate * 10 ether;
+        stage[3]["cap"] = rate * 4 ether;
         stage[3]["tranmin"] = stage[1]["tranmin"];
         stage[3]["closeTime"] = stage[2]["closeTime"].add(2 minutes);
         
@@ -966,11 +966,11 @@ contract PPTokenCrowdsale is  StagebleCrowdsale, CappedCrowdsale, WhitelistedCro
     */
     function PPTokenCrowdsale( PPToken _token) public
         Crowdsale(500, msg.sender, _token)//(_rate, _wallet, _token)
-        CappedCrowdsale((80 ether))//(_cap)
+        CappedCrowdsale((24 ether))//(_cap)24000 ETH/1000
         TimedCrowdsale(now, (now + (10 minutes)))//(_openingTime, _closingTime)
-        RefundableCrowdsale((30 ether))//(_goal)
+        RefundableCrowdsale((1 ether))//(_goal) 1000 ETH/ 1000
         AllowanceCrowdsale(msg.sender)
-        WhitelistedCrowdsale(10 ether)
+        WhitelistedCrowdsale(10 ether)// ~5000$
       {
         //As goal needs to be met for a successful crowdsale
         //the value needs to less or equal than a cap which is limit for accepted funds
