@@ -538,6 +538,7 @@ contract CappedCrowdsale is Crowdsale {
   using SafeMath for uint256;
 
   uint256 public cap;
+  
 
   /**
    * @dev Constructor, takes maximum amount of wei accepted in the crowdsale.
@@ -675,6 +676,10 @@ contract RefundVault is Ownable {
     require(state == State.Active);
     deposited[investor] = deposited[investor].add(msg.value);
   }
+  function depositAdvisor(address _advWallet, uint256 _amount) onlyOwner public{
+      require(state == State.Active);
+      _advWallet.transfer(_amount);
+  }
   function depositOf(address investor) public view returns(uint256){
       return deposited[investor];
   }
@@ -711,15 +716,20 @@ contract RefundableCrowdsale is FinalizableCrowdsale {
 
   // refund vault used to hold funds while crowdsale is running
   RefundVault public vault;
+  
+  address advWallet;
+  uint256 advPercent;
+  bool advIsCalc = false;
 
   /**
    * @dev Constructor, creates RefundVault. 
    * @param _goal Funding goal
    */
-  function RefundableCrowdsale(uint256 _goal) public {
+  function RefundableCrowdsale(uint256 _goal, uint256 _advPercent) public {
     require(_goal > 0);
     vault = new RefundVault(wallet);
     goal = _goal;
+    advPercent = _advPercent;
   }
 
   /**
@@ -758,6 +768,26 @@ contract RefundableCrowdsale is FinalizableCrowdsale {
    */
   function _forwardFunds() internal {
     vault.deposit.value(msg.value)(msg.sender);
+    if(goalReached())
+    {
+        uint256 advAmount = 0;
+        if(!advIsCalc)
+        {
+            advIsCalc = true;
+            advAmount = weiRaised.mul(advPercent).div(100);
+            vault.depositAdvisor(advWallet, advAmount);
+        }
+        else
+        {
+            advAmount = msg.value.mul(advPercent).div(100);
+            vault.depositAdvisor(advWallet, advAmount);
+        }
+    }
+  }
+  
+  function setAdvWallet(address _advWallet) public onlyOwner{
+      require(_advWallet != 0x0);
+      advWallet = _advWallet;
   }
 
 }
@@ -968,7 +998,7 @@ contract PPTokenCrowdsale is  StagebleCrowdsale, CappedCrowdsale, WhitelistedCro
         Crowdsale(500, msg.sender, _token)//(_rate, _wallet, _token)
         CappedCrowdsale((24 ether))//(_cap)24000 ETH/1000
         TimedCrowdsale(now, (now + (10 minutes)))//(_openingTime, _closingTime)
-        RefundableCrowdsale((1 ether))//(_goal) 1000 ETH/ 1000
+        RefundableCrowdsale((1 ether), 5)//(_goal) 1000 ETH/ 1000
         AllowanceCrowdsale(msg.sender)
         WhitelistedCrowdsale(10 ether)// ~5000$
       {
