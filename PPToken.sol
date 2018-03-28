@@ -768,7 +768,7 @@ contract RefundableCrowdsale is FinalizableCrowdsale {
    */
   function _forwardFunds() internal {
     vault.deposit.value(msg.value)(msg.sender);
-    if(goalReached())
+    if(goalReached() && advWallet != address(0))
     {
         uint256 advAmount = 0;
         if(!advIsCalc)
@@ -786,7 +786,7 @@ contract RefundableCrowdsale is FinalizableCrowdsale {
   }
   
   function setAdvWallet(address _advWallet) public onlyOwner{
-      require(_advWallet != 0x0);
+      require(_advWallet != address(0));
       advWallet = _advWallet;
   }
 
@@ -998,7 +998,7 @@ contract PPTokenCrowdsale is  StagebleCrowdsale, CappedCrowdsale, WhitelistedCro
         Crowdsale(500, msg.sender, _token)//(_rate, _wallet, _token)
         CappedCrowdsale((24 ether))//(_cap)24000 ETH/1000
         TimedCrowdsale(now, (now + (10 minutes)))//(_openingTime, _closingTime)
-        RefundableCrowdsale((1 ether), 5)//(_goal) 1000 ETH/ 1000
+        RefundableCrowdsale((2 ether), 5)//(_goal) 1000 ETH/ 1000
         AllowanceCrowdsale(msg.sender)
         WhitelistedCrowdsale(10 ether)// ~5000$
       {
